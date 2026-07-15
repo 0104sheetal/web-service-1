@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Development Architecture V5 — MESSOLD</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist-sans@1.0.1/dist/geist-sans.css">
+    
+    <style>
+        /* --- BRAND DESIGN CORE SYSTEMS --- */
+        :root {
+            --bg-master: #ffffff;
+            --text-master: #050505;
+            --border-master: rgba(0, 0, 0, 0.08);
+            --accent-master: #050505;
+            --font-editorial: 'Geist Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --ease-cinematic: cubic-bezier(0.25, 1, 0.5, 1);
+            --transition-color: background-color 1.2s var(--ease-cinematic), color 1.2s var(--ease-cinematic), border-color 1.2s var(--ease-cinematic);
+        }
+
+        /* --- IMMERSIVE OVERRIDES & UTILITIES --- */
+        .ms-theme-engine {
+            font-family: var(--font-editorial);
+            background-color: var(--bg-master);
+            color: var(--text-master);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            transition: var(--transition-color);
+        }
+
+        .ms-theme-engine *, .ms-theme-engine *::before, .ms-theme-engine *::after {
+            box-sizing: inherit;
+        }
+
+        /* Section Color Intersections */
+        .color-stage-white { --bg-master: #ffffff; --text-master: #050505; --border-master: rgba(0, 0, 0, 0.08); }
+        .color-stage-warm { --bg-master: #f8f8f8; --text-master: #050505; --border-master: rgba(0, 0, 0, 0.06); }
+        .color-stage-black { --bg-master: #050505; --text-master: #ffffff; --border-master: rgba(255, 255, 255, 0.1); }
+
+        .layout-wrapper {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 5rem;
+        }
+
+        @media (max-width: 991px) {
+            .layout-wrapper { padding: 0 2.5rem; }
+        }
+        @media (max-width: 768px) {
+            .layout-wrapper { padding: 0 1.5rem; }
+        }
+
+        /* Spacing System */
+        .section-padding {
+            padding: 5rem 0;
+        }
+        @media (max-width: 768px) {
+            .section-padding { padding: 3.5rem 0; }
+        }
+
+        /* Generic Elegant Typographic Indicators */
+        .label-editorial {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 400;
+            opacity: 0.6;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .cta-editorial-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 1rem 2.5rem;
+            border: 1px solid var(--text-master);
+            background: transparent;
+            color: var(--text-master);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.4s var(--ease-cinematic);
+        }
+        .cta-editorial-btn:hover {
+            background: var(--text-master);
+            color: var(--bg-master);
+        }
+
+        /* --- ADVANCED SCROLL-ANIMATING HERO SECTION --- */
+        .hero-scroll-container {
+            position: relative;
+            height: 200vh;
+            background: #050505;
+        }
+
+        .hero-sticky-viewport {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .hero-content-overlay {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #ffffff;
+            max-width: 1100px;
+            padding: 0 2rem;
+            will-change: transform, opacity;
+            transform-style: preserve-3d;
+        }
+
+        .hero-title-headline {
+            font-size: clamp(2.8rem, 6.5vw, 5.5rem);
+            font-weight: 200;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: 2rem;
+        }
+        .hero-title-headline span { font-weight: 400; display: block; }
+
+        .hero-paragraph-desc {
+            font-size: clamp(1rem, 1.5vw, 1.25rem);
+            font-weight: 200;
+            opacity: 0.8;
+            max-width: 650px;
+            margin: 0 auto 3rem auto;
+            line-height: 1.6;
+        }
+
+        .hero-action-row .cta-editorial-btn { 
+            border-color: #ffffff; 
+            color: #ffffff; 
+        }
+        .hero-action-row .cta-editorial-btn:hover { 
+            background: #ffffff; 
+            color: #050505; 
+        }
+
+        .hero-premium-ticker-stack {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.5rem 0;
+            overflow: hidden;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            will-change: transform;
+        }
+
+        .ticker-scroller-track {
+            display: flex;
+            width: max-content;
+            animation: infiniteLoopMarquee 28s linear infinite;
+        }
+        .ticker-scroller-track.reverse-track {
+            animation: infiniteLoopMarqueeReverse 28s linear infinite;
+        }
+
+        .ticker-scroller-item {
+            font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            padding: 0 3rem;
+            font-weight: 200;
+            opacity: 0.25;
+            transition: opacity 0.4s ease;
+        }
+        .ticker-scroller-item:hover { opacity: 0.9; }
+        .ticker-scroller-item strong { font-weight: 400; color: #ffffff; }
+
+        @keyframes infiniteLoopMarquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
+        @keyframes infiniteLoopMarqueeReverse {
+            0% { transform: translate3d(-50%, 0, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
+
+        /* --- DESCRIPTIVE SHOPIFY CHAMPIONS SHOWCASE --- */
+        .champions-split-showcase {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 5rem;
+            align-items: center;
+            padding-bottom: 4rem;
+        }
+        @media (max-width: 991px) {
+            .champions-split-showcase { grid-template-columns: 1fr; gap: 3rem; }
+        }
+        
+        .champions-editorial-statement {
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 200;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+        .champions-editorial-statement strong { font-weight: 400; }
+        
+        .champions-prose-description {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            opacity: 0.7;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .champions-visual-frame {
+            background: var(--border-master);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            border: 1px solid var(--border-master);
+        }
+        .champions-visual-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .champions-marquee-wrapper {
+            overflow: hidden;
+            width: 100%;
+            border-top: 1px solid var(--border-master);
+            border-bottom: 1px solid var(--border-master);
+            padding: 1.8rem 0;
+            margin-top: 1rem;
+        }
+        .champions-flex-track {
+            display: flex;
+            gap: 5rem;
+            width: max-content;
+            animation: infiniteLoopMarquee 20s linear infinite;
+            align-items: center;
+        }
+        .champion-badge-text {
+            font-size: 1.3rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        .champion-badge-text strong { font-weight: 500; }
+
+        /* --- EDITORIAL SPLIT CONFIGURATION --- */
+        .split-editorial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: start;
+        }
+        @media (max-width: 991px) {
+            .split-editorial-grid { grid-template-columns: 1fr; gap: 4rem; }
+        }
+
+        .split-statement-sticky {
+            position: sticky;
+            top: 6rem;
+        }
+        .split-statement-headline {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 200;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+        .split-statement-headline span { display: block; font-weight: 400; margin-top: 1rem; }
+
+        .split-reasons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4rem;
+        }
+
+        .reason-typography-block {
+            opacity: 0.15;
+            transform: translateY(30px);
+            transition: all 0.8s var(--ease-cinematic);
+        }
+        .reason-typography-block.revealed-node {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reason-node-num {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            opacity: 0.5;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .reason-node-title {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+        .reason-node-desc {
+            font-size: 1rem;
+            line-height: 1.65;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        /* --- NEW: HORIZONTAL SCROLL-JACKED PROCESS ANIMATION --- */
+        .process-scroll-jacking-stage {
+            position: relative;
+            height: 350vh; /* Controlled area defining how long the user scrolls through the stages */
+            background: #050505;
+            color: #ffffff;
+            margin-bottom: -5rem; /* Reduces spacing below by compressing the stage anchor height */
+        }
+
+        .process-sticky-latch {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .process-horizontal-track {
+            display: flex;
+            height: fit-content;
+            width: max-content;
+            padding: 0 5rem; /* Mirrors layout wrapper horizontal padding */
+            will-change: transform;
+            transition: transform 0.1s linear; /* Short ease to dampen scroll jank */
+        }
+        @media (max-width: 768px) {
+            .process-horizontal-track { padding: 0 1.5rem; }
+        }
+
+        .process-stage-node {
+            width: clamp(300px, 40vw, 480px);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 2rem 0 3.5rem;
+            margin: 0 2rem;
+            opacity: 0.2;
+            transition: opacity 0.6s var(--ease-cinematic);
+        }
+        .process-stage-node:first-child { border-left: none; margin-left: 0; padding-left: 0; }
+        .process-stage-node.revealed-active-stage {
+            opacity: 1;
+            border-left-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stage-node-title-row {
+            margin-bottom: 1.5rem;
+        }
+        .stage-card-num {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            opacity: 0.5;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .stage-card-title {
+            font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+            font-weight: 300;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .stage-card-desc {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            opacity: 0.7;
+            font-weight: 300;
+            max-width: 400px;
+        }
+
+        /* --- CAPABILITY VECTORS MATRIX --- */
+        .capability-asymmetrical-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+        @media (max-width: 991px) {
+            .capability-asymmetrical-matrix { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .capability-asymmetrical-matrix { grid-template-columns: 1fr; }
+        }
+
+        .capability-matrix-node {
+            border-top: 1px solid var(--border-master);
+            padding-top: 2rem;
+            transition: border-color 0.4s ease;
+        }
+        .capability-matrix-node:hover {
+            border-color: var(--text-master);
+        }
+        .cap-matrix-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+        .cap-matrix-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        /* --- RIGOROUS COUNTERS SYSTEM --- */
+        .engineering-editorial-column {
+            display: flex;
+            flex-direction: column;
+            gap: 6rem;
+            margin-top: 3rem;
+        }
+
+        .engineering-block-item {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 5rem;
+            align-items: center;
+        }
+        .engineering-block-item.alt-block-layout {
+            grid-template-columns: 0.9fr 1.1fr;
+        }
+
+        @media (max-width: 991px) {
+            .engineering-block-item, .engineering-block-item.alt-block-layout {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+            .engineering-block-item.alt-block-layout .engineering-media-wrapper {
+                order: -1;
+            }
+        }
+
+        .engineering-media-wrapper {
+            background: var(--border-master);
+            overflow: hidden;
+            aspect-ratio: 16/10;
+        }
+        .engineering-media-wrapper img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .engineering-notes-box {
+            padding: 1rem 0;
+        }
+
+        .engineering-notes-headline {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .engineering-notes-body {
+            font-size: 1rem;
+            line-height: 1.7;
+            opacity: 0.7;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .engineering-metrics-badge {
+            display: inline-flex;
+            gap: 3rem;
+            border-top: 1px solid var(--border-master);
+            padding-top: 1.5rem;
+            width: 100%;
+        }
+
+        .metric-counter-block {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .metric-counter-display {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 200;
+            color: var(--text-master);
+            margin-top: 0.25rem;
+            letter-spacing: -0.03em;
+        }
+
+        /* --- OPERATIONAL BLUEPRINT FRAMEWORK --- */
+        .blueprint-horizontal-viewport {
+            margin-top: 3rem;
+            border: 1px solid var(--border-master);
+            display: flex;
+            height: 400px;
+            overflow: hidden;
+        }
+        @media (max-width: 991px) {
+            .blueprint-horizontal-viewport {
+                flex-direction: column;
+                height: auto;
+            }
+        }
+
+        .blueprint-accordion-pane {
+            flex: 1;
+            border-right: 1px solid var(--border-master);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            background: var(--bg-master);
+            transition: flex 0.6s var(--ease-cinematic), background-color 0.4s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .blueprint-accordion-pane:last-child { border-right: none; }
+
+        @media (max-width: 991px) {
+            .blueprint-accordion-pane {
+                border-right: none;
+                border-bottom: 1px solid var(--border-master);
+                min-height: 120px;
+                flex: none;
+            }
+            .blueprint-accordion-pane:last-child { border-bottom: none; }
+        }
+
+        .blueprint-accordion-pane:hover {
+            flex: 2.5;
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .color-stage-black .blueprint-accordion-pane:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .blueprint-pane-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .blueprint-pane-index { font-size: 0.8rem; opacity: 0.4; }
+        .blueprint-pane-title {
+            font-size: 1.25rem;
+            font-weight: 400;
+            transform: rotate(-90deg) translate(-20px, 0);
+            transform-origin: left top;
+            white-space: nowrap;
+            position: absolute;
+            top: 120px; left: 2.5rem;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        .blueprint-accordion-pane:hover .blueprint-pane-title {
+            transform: rotate(0) translate(0, 0);
+            position: relative;
+            top: 0; left: 0;
+            margin-top: 1.5rem;
+        }
+
+        .blueprint-pane-hidden-content {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+            max-width: 320px;
+        }
+        .blueprint-accordion-pane:hover .blueprint-pane-hidden-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 991px) {
+            .blueprint-pane-title {
+                transform: rotate(0);
+                position: relative;
+                top: 0; left: 0;
+            }
+            .blueprint-pane-hidden-content {
+                opacity: 1;
+                transform: translateY(0);
+                max-width: 100%;
+                margin-top: 1rem;
+            }
+            .blueprint-accordion-pane:hover { flex: none; }
+        }
+
+        .blueprint-pane-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        /* --- VERIFIED TELEMETRY SLIDER WITH DUMMY VIDEOS --- */
+        .netflix-slider-outer {
+            position: relative;
+            margin-top: 3rem;
+        }
+
+        .netflix-track-clip {
+            overflow: hidden;
+            padding: 1rem 0;
+        }
+
+        .netflix-horizontal-strip {
+            display: flex;
+            gap: 2.5rem;
+            transition: transform 0.6s var(--ease-cinematic);
+            width: max-content;
+        }
+
+        .netflix-video-card {
+            width: 380px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+            .netflix-video-card { width: 280px; }
+        }
+
+        .netflix-video-element-wrapper {
+            position: relative;
+            aspect-ratio: 16/10;
+            background: #000;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            transition: transform 0.4s var(--ease-cinematic);
+        }
+        .netflix-video-card:hover .netflix-video-element-wrapper {
+            transform: scale(1.02);
+        }
+
+        .netflix-video-element-wrapper video {
+            width: 100%; height: 100%; object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .netflix-card-quote {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+            opacity: 0.85;
+        }
+
+        .netflix-card-profile-meta {
+            border-top: 1px solid var(--border-master);
+            padding-top: 1rem;
+        }
+        .netflix-profile-name { font-size: 0.9rem; font-weight: 400; margin-bottom: 0.2rem; }
+        .netflix-profile-brand { font-size: 0.75rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .netflix-controls-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .netflix-arrow-trigger {
+            width: 50px; height: 50px;
+            border: 1px solid var(--text-master);
+            background: transparent;
+            color: var(--text-master);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .netflix-arrow-trigger:hover {
+            background: var(--text-master); color: var(--bg-master);
+        }
+        .netflix-arrow-trigger:disabled {
+            opacity: 0.2; cursor: not-allowed;
+        }
+
+        /* --- SECTOR ADAPTABILITY + CASE STUDY HIGHLIGHTS --- */
+        .industry-ribbon-stage {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 6rem;
+            align-items: center;
+            margin-top: 3rem;
+        }
+        @media (max-width: 991px) {
+            .industry-ribbon-stage { grid-template-columns: 1fr; gap: 3rem; }
+            .industry-preview-viewport-frame { order: -1; }
+        }
+
+        .industry-interactive-menu-strip {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .industry-menu-anchor-item {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 200;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-master);
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.4s ease, transform 0.4s var(--ease-cinematic);
+            display: flex;
+            flex-direction: column;
+        }
+        .industry-menu-anchor-item:hover, .industry-menu-anchor-item.active-industry-item {
+            opacity: 1;
+            transform: translateX(15px);
+        }
+        
+        .industry-case-highlight {
+            font-size: 0.9rem;
+            font-weight: 300;
+            letter-spacing: 0;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            margin-top: 0.5rem;
+            color: var(--text-master);
+        }
+        .industry-menu-anchor-item.active-industry-item .industry-case-highlight {
+            opacity: 0.6;
+            max-height: 50px;
+        }
+
+        .industry-preview-viewport-frame {
+            aspect-ratio: 3/4;
+            background: var(--border-master);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .industry-scenographic-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.6s ease, transform 0.8s ease;
+            transform: scale(1.05);
+        }
+        .industry-scenographic-img.visible-img-node {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- FUNCTIONAL CORE MODULE SPEC ROWS --- */
+        .specification-rows-container {
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-master);
+        }
+
+        .spec-collapsible-row {
+            border-bottom: 1px solid var(--border-master);
+            overflow: hidden;
+        }
+
+        .spec-row-trigger-panel {
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .spec-row-title-text { font-size: 1.2rem; font-weight: 400; }
+        .spec-row-toggle-cross {
+            font-size: 1.3rem; font-weight: 200; transition: transform 0.4s var(--ease-cinematic);
+        }
+
+        .spec-row-hidden-body {
+            max-height: 0;
+            transition: max-height 0.5s var(--ease-cinematic);
+        }
+
+        .spec-row-body-inner-content {
+            padding-bottom: 2rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.7;
+            max-width: 800px;
+            font-weight: 300;
+        }
+
+        .spec-collapsible-row.row-expanded .spec-row-toggle-cross {
+            transform: rotate(45deg);
+        }
+
+        /* --- CLEAR ANSWERS (FAQ) --- */
+        .premium-faq-split-axis {
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 6rem;
+        }
+        @media (max-width: 991px) {
+            .premium-faq-split-axis { grid-template-columns: 1fr; gap: 4rem; }
+        }
+
+        .faq-left-editorial-panel h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 200;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        .faq-left-editorial-panel p {
+            font-size: 1rem; opacity: 0.7; line-height: 1.6; font-weight: 300; margin-bottom: 3rem;
+        }
+
+        .faq-editorial-contacts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .faq-contact-anchor {
+            font-size: 0.95rem; color: var(--text-master); text-decoration: none; font-weight: 400; width: fit-content; border-bottom: 1px solid var(--text-master); padding-bottom: 0.2rem;
+        }
+
+        .faq-accordion-stack {
+            border-top: 1px solid var(--border-master);
+        }
+
+        .faq-accordion-node {
+            border-bottom: 1px solid var(--border-master);
+        }
+        .faq-node-trigger {
+            padding: 2rem 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .faq-node-headline { font-size: 1.15rem; font-weight: 400; padding-right: 2rem; }
+        .faq-node-sign { font-size: 1.2rem; font-weight: 200; transition: transform 0.4s var(--ease-cinematic); }
+        
+        .faq-node-hidden-drawer {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease-cinematic);
+        }
+        .faq-drawer-inner-prose {
+            padding-bottom: 2rem; font-size: 0.95rem; line-height: 1.65; opacity: 0.7; font-weight: 300;
+        }
+
+        .faq-accordion-node.drawer-active .faq-node-sign {
+            transform: rotate(45deg);
+        }
+
+        /* --- STUDIO FOOTER STAGE --- */
+        .asymmetrical-studio-footer {
+            padding: 8rem 0 4rem 0;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 6rem;
+            align-items: end;
+        }
+        @media (max-width: 991px) {
+            .asymmetrical-studio-footer { grid-template-columns: 1fr; gap: 4rem; }
+        }
+
+        .footer-left-headline h2 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 200;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        .footer-right-telemetry-directory {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .footer-directory-nav-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .footer-directory-nav-block label {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.4; margin-bottom: 0.5rem;
+        }
+        .footer-directory-nav-block a {
+            font-size: 1.5rem; color: var(--text-master); text-decoration: none; font-weight: 300; width: fit-content; transition: opacity 0.3s ease;
+        }
+        .footer-directory-nav-block a:hover { opacity: 0.6; }
+
+        .footer-meta-notes-row {
+            display: flex;
+            gap: 3rem;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body class="ms-theme-engine color-stage-white">
+
+    <div class="hero-scroll-container">
+        <section class="hero-sticky-viewport">
+            <div class="hero-content-overlay" id="heroText">
+                <span class="label-editorial" style="color: #ffffff; opacity: 0.5;">Website Development</span>
+                <h1 class="hero-title-headline">Engineering Shopify Stores <span>That Scale Businesses.</span></h1>
+                <p class="hero-paragraph-desc">Bespoke technical execution engineered exclusively for high-volume enterprise brands requiring absolute stability, architectural modularity, and rapid performance velocity.</p>
+                <div class="hero-action-row">
+                    <a href="#footerContact" class="cta-editorial-btn">Book Discovery Call</a>
+                </div>
+            </div>
+            
+            <div class="hero-premium-ticker-stack" id="heroTicker">
+                <div class="ticker-scroller-track">
+                    <div class="ticker-scroller-item">Shopify Plus <strong>Enterprise</strong></div>
+                    <div class="ticker-scroller-item">Headless <strong>Commerce</strong></div>
+                    <div class="ticker-scroller-item">Subscriptions <strong>Ecosystems</strong></div>
+                    <div class="ticker-scroller-item">Wholesale <strong>Architecture</strong></div>
+                    <div class="ticker-scroller-item">Shopify Plus <strong>Enterprise</strong></div>
+                    <div class="ticker-scroller-item">Headless <strong>Commerce</strong></div>
+                    <div class="ticker-scroller-item">Subscriptions <strong>Ecosystems</strong></div>
+                    <div class="ticker-scroller-item">Wholesale <strong>Architecture</strong></div>
+                </div>
+                <div class="ticker-scroller-track reverse-track">
+                    <div class="ticker-scroller-item">Metaobjects <strong>Layering</strong></div>
+                    <div class="ticker-scroller-item">International <strong>Selling</strong></div>
+                    <div class="ticker-scroller-item">ERP <strong>Integrations</strong></div>
+                    <div class="ticker-scroller-item">Checkout <strong>Extensions</strong></div>
+                    <div class="ticker-scroller-item">Metaobjects <strong>Layering</strong></div>
+                    <div class="ticker-scroller-item">International <strong>Selling</strong></div>
+                    <div class="ticker-scroller-item">ERP <strong>Integrations</strong></div>
+                    <div class="ticker-scroller-item">Checkout <strong>Extensions</strong></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section class="section-padding color-stage-white structural-scroll-marker" data-theme="color-stage-white">
+        <div class="layout-wrapper">
+            <span class="label-editorial">Verified Alignment</span>
+            
+            <div class="champions-split-showcase">
+                <div>
+                    <h2 class="champions-editorial-statement">An accredited ecosystem for <strong>high-growth scale.</strong></h2>
+                    <p class="champions-prose-description">
+                        As vetted technical specialists, we engineer highly optimized storefront parameters that convert traffic at historic thresholds. We bypass the structural limitations of native legacy themes to construct clean codebase configurations tailored perfectly to complex operational flows, international checkout expansion paths, and high-frequency real-time backend updates.
+                    </p>
+                    <a href="#capabilityvectors" class="cta-editorial-btn" style="padding: 0.8rem 2rem; font-size: 0.75rem;">Explore Architecture</a>
+                </div>
+                <div>
+                    <div class="champions-visual-frame">
+                        <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80" alt="MESSOLD enterprise systems engineering interface visualization">
+                    </div>
+                </div>
+            </div>
+
+            <div class="champions-marquee-wrapper">
+                <div class="champions-flex-track">
+                    <div class="champion-badge-text">Shopify Plus <strong>Partner</strong></div>
+                    <div class="champion-badge-text">Hydrogen <strong>Certified</strong></div>
+                    <div class="champion-badge-text">POS Omnichannel <strong>Specialists</strong></div>
+                    <div class="champion-badge-text">Enterprise Scale <strong>Experts</strong></div>
+                    <div class="champion-badge-text">Shopify Plus <strong>Partner</strong></div>
+                    <div class="champion-badge-text">Hydrogen <strong>Certified</strong></div>
+                    <div class="champion-badge-text">POS Omnichannel <strong>Specialists</strong></div>
+                    <div class="champion-badge-text">Enterprise Scale <strong>Experts</strong></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-white structural-scroll-marker" data-theme="color-stage-white">
+        <div class="layout-wrapper">
+            <div class="split-editorial-grid">
+                <div class="split-statement-sticky">
+                    <span class="label-editorial">Core Philosophy</span>
+                    <h2 class="split-statement-headline">We don't build websites. <span>We engineer revenue systems.</span></h2>
+                </div>
+                <div class="split-reasons-list">
+                    <div class="reason-typography-block scroll-triggered-reveal">
+                        <span class="reason-node-num">01 / DISCOVERY INTERPOLATION</span>
+                        <h3 class="reason-node-title">Conversion-First UX</h3>
+                        <p class="reason-node-desc">Every interactive node is designed based on deep transactional behavioral data, removing micro-frictional patterns that disrupt paths to conversion.</p>
+                    </div>
+                    <div class="reason-typography-block scroll-triggered-reveal">
+                        <span class="reason-node-num">02 / ARCHITECTURAL INTEGRITY</span>
+                        <h3 class="reason-node-title">Custom Shopify Development</h3>
+                        <p class="reason-node-desc">Clean Liquid code structures and standardized application integrations devoid of typical visual app overhead parameters.</p>
+                    </div>
+                    <div class="reason-typography-block scroll-triggered-reveal">
+                        <span class="reason-node-num">03 / VELOCITY INDEXING</span>
+                        <h3 class="reason-node-title">Fast Loading Performance</h3>
+                        <p class="reason-node-desc">Advanced data fetching models, rigorous asset balancing, and optimized edge delivery systems targeting Core Web Vitals structural health metrics.</p>
+                    </div>
+                    <div class="reason-typography-block scroll-triggered-reveal">
+                        <span class="reason-node-num">04 / LIFECYCLE MANAGEMENT</span>
+                        <h3 class="reason-node-title">Long-term Technical Partnership</h3>
+                        <p class="reason-node-desc">We do not execute transactional drop-offs. We iterate alongside your expansion curves, offering continuous system intelligence support cycles.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="process-scroll-jacking-stage" id="deploymentroutine">
+        <section class="process-sticky-latch">
+            <div class="layout-wrapper">
+                <span class="label-editorial" style="color: #ffffff; opacity: 0.5;">Deployment Routine</span>
+            </div>
+            
+            <div class="process-horizontal-track" id="processTrack">
+                <div class="process-stage-node revealed-active-stage" data-index="0">
+                    <div class="stage-node-title-row">
+                        <span class="stage-card-num">STAGE 01</span>
+                        <h3 class="stage-card-title">Project Kickoff</h3>
+                    </div>
+                    <p class="stage-card-desc">Aligning engineering teams, scoping absolute repository environments, and solidifying milestones configuration parameters.</p>
+                </div>
+                <div class="process-stage-node" data-index="1">
+                    <div class="stage-node-title-row">
+                        <span class="stage-card-num">STAGE 02</span>
+                        <h3 class="stage-card-title">Architectural Scoping</h3>
+                    </div>
+                    <p class="stage-card-desc">Mapping existing data schema mutations, custom application matrices, and edge logic rules parameters securely.</p>
+                </div>
+                <div class="process-stage-node" data-index="2">
+                    <div class="stage-node-title-row">
+                        <span class="stage-card-num">STAGE 03</span>
+                        <h3 class="stage-card-title">Sprint Executions</h3>
+                    </div>
+                    <p class="stage-card-desc">Writing isolated modular code blocks natively matching strict UI specs without standard platform template bloat.</p>
+                </div>
+                <div class="process-stage-node" data-index="3">
+                    <div class="stage-node-title-row">
+                        <span class="stage-card-num">STAGE 04</span>
+                        <h3 class="stage-card-title">System Integration</h3>
+                    </div>
+                    <p class="stage-card-desc">Plugging middleware nodes into ERP systems and connecting real-time inventory management paths flawlessly.</p>
+                </div>
+                <div class="process-stage-node" data-index="4">
+                    <div class="stage-node-title-row">
+                        <span class="stage-card-num">STAGE 05</span>
+                        <h3 class="stage-card-title">Production Delivery</h3>
+                    </div>
+                    <p class="stage-card-desc">Enforcing final zero-downtime canonical migration, pixel accuracy triggers, and live browser optimization cycles.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section class="section-padding color-stage-black structural-scroll-marker" data-theme="color-stage-black" id="capabilityvectors">
+        <div class="layout-wrapper">
+            <span class="label-editorial" style="color: #ffffff; opacity: 0.6;">Capability Vectors</span>
+            <h2 class="split-statement-headline">Architectural Prowess Built Into <br>Shopify Core Systems.</h2>
+            
+            <div class="capability-asymmetrical-matrix">
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">Shopify Plus Enterprise</h3>
+                    <p class="cap-matrix-desc">Deploying multi-store localization frameworks, complex scripting engines, and highly customizable internal architecture layers.</p>
+                </div>
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">Custom Theme Development</h3>
+                    <p class="cap-matrix-desc">Semantic, high-performance modular sections built strictly from scratch following precise component specifications.</p>
+                </div>
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">Checkout Customisation</h3>
+                    <p class="cap-matrix-desc">Deploying Shopify Checkout Extensions natively to drive average order value upsells and deep pixel validation mappings.</p>
+                </div>
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">App Integrations & APIs</h3>
+                    <p class="cap-matrix-desc">Connecting mission-critical enterprise Resource Planners (ERP) and complex inventory management mechanics through middleware pipelines.</p>
+                </div>
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">Performance Optimisation</h3>
+                    <p class="cap-matrix-desc">Revising layout shifting vectors, establishing strict lazy loading thresholds, and structuring asynchronous rendering priorities.</p>
+                </div>
+                <div class="capability-matrix-node">
+                    <h3 class="cap-matrix-title">International Expansion</h3>
+                    <p class="cap-matrix-desc">Configuring Shopify Markets to distribute multi-currency processing layers and geo-targeted store distribution routes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-white structural-scroll-marker" data-theme="color-stage-white">
+        <div class="layout-wrapper">
+            <span class="label-editorial">Rigorous Specifications</span>
+            <h2 class="split-statement-headline" style="max-width: 600px;">Built Behind The Scenes.</h2>
+            
+            <div class="engineering-editorial-column">
+                <div class="engineering-block-item">
+                    <div class="engineering-media-wrapper">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="Core web vitals performance graph dashboard">
+                    </div>
+                    <div class="engineering-notes-box">
+                        <h3 class="engineering-notes-headline">Structural Optimization Architecture</h3>
+                        <p class="engineering-notes-body">We isolate JavaScript initialization paths, completely eliminate layout shifts, and prioritize critical CSS delivery mechanisms. The result is rapid visual stabilization across all modern browser screens.</p>
+                        <div class="engineering-metrics-badge">
+                            <div class="metric-counter-block">Target Speed Index <span class="metric-counter-display" data-target="99">0</span></div>
+                            <div class="metric-counter-block">Accessibility Index <span class="metric-counter-display" data-target="100">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="engineering-block-item alt-block-layout">
+                    <div class="engineering-notes-box">
+                        <h3 class="engineering-notes-headline">Semantic Schema & SEO Routing</h3>
+                        <p class="engineering-notes-body">Constructing clean data vocabularies naturally parsing product metaobjects, real-time inventory values, and review metrics down to the structural code layer. Search index engines map out your store effortlessly.</p>
+                        <div class="engineering-metrics-badge">
+                            <div class="metric-counter-block">Structured Entities <span class="metric-counter-display" data-target="45">0</span></div>
+                            <div class="metric-counter-block">Data Accuracy <span class="metric-counter-display" data-target="99">0</span></div>
+                        </div>
+                    </div>
+                    <div class="engineering-media-wrapper">
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80" alt="Structured data code matrix schema layout representation">
+                    </div>
+                </div>
+
+                <div class="engineering-block-item">
+                    <div class="engineering-media-wrapper">
+                        <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=800&q=80" alt="Conversion tracking server analytics configuration console view">
+                    </div>
+                    <div class="engineering-notes-box">
+                        <h3 class="engineering-notes-headline">Precision Telemetry & Server Tracking</h3>
+                        <p class="engineering-notes-body">Setting up server-side analytics loops that bypass normal web ad-blocking rules to keep attribution records highly accurate across external platforms without loading down the buyer's storefront thread.</p>
+                        <div class="engineering-metrics-badge">
+                            <div class="metric-counter-block">Attribution Boost <span class="metric-counter-display" data-target="18">0</span></div>
+                            <div class="metric-counter-block">Latency (ms) <span class="metric-counter-display" data-target="0">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-warm structural-scroll-marker" data-theme="color-stage-warm">
+        <div class="layout-wrapper">
+            <span class="label-editorial">Operational Blueprint</span>
+            <h2 class="split-statement-headline" style="max-width: 600px;">The Engineering Lifecycle.</h2>
+            
+            <div class="blueprint-horizontal-viewport">
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">01</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Discovery</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Deep structural auditing of API bottlenecks, performance debt, and legacy application parameters.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">02</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Strategy</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Mapping out integration logic trees, technical layout metrics, and checkout upgrade maps.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">03</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">UX Mapping</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Crafting micro-interaction path diagrams mapped against customer transaction habits.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">04</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">UI Design</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Editorial layout system creation with precise grid properties tailored to premium brands.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">05</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Development</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Hand-generating modular components using modern, valid Liquid and JS frameworks.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">06</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Rigorous QA</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Subjecting checkout routing and speed boundaries to cross-device stress testing matrices.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">07</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Launch</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Executing flawless DNS failover migrations without interrupting live buyer sessions.</p>
+                    </div>
+                </div>
+
+                <div class="blueprint-accordion-pane">
+                    <div class="blueprint-pane-top">
+                        <span class="blueprint-pane-index">08</span>
+                    </div>
+                    <h3 class="blueprint-pane-title">Optimisation</h3>
+                    <div class="blueprint-pane-hidden-content">
+                        <p class="blueprint-pane-desc">Iteratively applying performance tuning models based on live post-launch session telemetry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-black structural-scroll-marker" data-theme="color-stage-black">
+        <div class="layout-wrapper">
+            <span class="label-editorial" style="color: #ffffff; opacity: 0.6;">Verified Telemetry</span>
+            <h2 class="expertise-sticky-title">Client Video Stories.</h2>
+            
+            <div class="netflix-slider-outer">
+                <div class="netflix-track-clip">
+                    <div class="netflix-horizontal-strip" id="netflixStrip">
+                        
+                        <div class="netflix-video-card">
+                            <div class="netflix-video-element-wrapper">
+                                <video loop muted playsinline autoplay src="https://assets.mixkit.co/videos/preview/mixkit-corporate-woman-working-with-colleagues-in-office-42267-large.mp4"></video>
+                            </div>
+                            <p class="netflix-card-quote">"MESSOLD completely reconstructed our catalog rendering framework. Real-time conversion trends scaled immediately post-deployment."</p>
+                            <div class="netflix-card-profile-meta">
+                                <h4 class="netflix-profile-name">Aayushi Jain</h4>
+                                <span class="netflix-profile-brand">Founder, Weaving Cult &bull; Apparel</span>
+                            </div>
+                        </div>
+
+                        <div class="netflix-video-card">
+                            <div class="netflix-video-element-wrapper">
+                                <video loop muted playsinline autoplay src="https://assets.mixkit.co/videos/preview/mixkit-man-working-on-his-laptop-at-home-42284-large.mp4"></video>
+                            </div>
+                            <p class="netflix-card-quote">"The API checkout layers they built solved complex custom parameters we thought were impossible on standard Shopify layers."</p>
+                            <div class="netflix-card-profile-meta">
+                                <h4 class="netflix-profile-name">Adeeb Rais</h4>
+                                <span class="netflix-profile-brand">Founder, Love a Lot &bull; Cosmetics</span>
+                            </div>
+                        </div>
+
+                        <div class="netflix-video-card">
+                            <div class="netflix-video-element-wrapper">
+                                <video loop muted playsinline autoplay src="https://assets.mixkit.co/videos/preview/mixkit-working-late-in-a-modern-office-42251-large.mp4"></video>
+                            </div>
+                            <p class="netflix-card-quote">"Our page score metrics jumped drastically while total bounce profiles reached historic lows inside the first quarter."</p>
+                            <div class="netflix-card-profile-meta">
+                                <h4 class="netflix-profile-name">Dr. Pooja Malhotra</h4>
+                                <span class="netflix-profile-brand">Founder, Powersutra &bull; Wellness</span>
+                            </div>
+                        </div>
+
+                        <div class="netflix-video-card">
+                            <div class="netflix-video-element-wrapper">
+                                <video loop muted playsinline autoplay src="https://assets.mixkit.co/videos/preview/mixkit-woman-designer-working-on-laptop-42296-large.mp4"></video>
+                            </div>
+                            <p class="netflix-card-quote">"Architectural transition models handled our high-volume flash sales without single database lock latency dropouts."</p>
+                            <div class="netflix-card-profile-meta">
+                                <h4 class="netflix-profile-name">Sarah Jenkins</h4>
+                                <span class="netflix-profile-brand">CTO, Modus Living &bull; Design</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="netflix-controls-row">
+                    <button class="netflix-arrow-trigger" id="netflixPrev" disabled>&larr;</button>
+                    <button class="netflix-arrow-trigger" id="netflixNext">&rarr;</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-white structural-scroll-marker" data-theme="color-stage-white">
+        <div class="layout-wrapper">
+            <span class="label-editorial">Sector Adaptability</span>
+            <h2 class="split-statement-headline">Tailored Across High-Value Verticals.</h2>
+            
+            <div class="industry-ribbon-stage">
+                <div class="industry-interactive-menu-strip">
+                    <div class="industry-menu-anchor-item active-industry-item" data-index="0">
+                        <span>Fashion</span>
+                        <div class="industry-case-highlight">Case Study: 140% Conversion Scaling at Aura Apparels</div>
+                    </div>
+                    <div class="industry-menu-anchor-item" data-index="1">
+                        <span>Beauty</span>
+                        <div class="industry-case-highlight">Case Study: 0.9s Headless LCP Performance at Le Soin</div>
+                    </div>
+                    <div class="industry-menu-anchor-item" data-index="2">
+                        <span>Jewellery</span>
+                        <div class="industry-case-highlight">Case Study: ERP Synchronization Deployment at Verte Metals</div>
+                    </div>
+                    <div class="industry-menu-anchor-item" data-index="3">
+                        <span>Lifestyle</span>
+                        <div class="industry-case-highlight">Case Study: Global Multi-Market Routing Architecture</div>
+                    </div>
+                    <div class="industry-menu-anchor-item" data-index="4">
+                        <span>Furniture</span>
+                        <div class="industry-case-highlight">Case Study: Immersive Configurator Pipeline at Nordic Atelier</div>
+                    </div>
+                    <div class="industry-menu-anchor-item" data-index="5">
+                        <span>Wellness</span>
+                        <div class="industry-case-highlight">Case Study: Automated Subscriptions Scaling Layer</div>
+                    </div>
+                </div>
+                
+                <div class="industry-preview-viewport-frame">
+                    <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img visible-img-node" data-index="0" alt="Fashion visual matrix rendering component visual frame asset">
+                    <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img" data-index="1" alt="Beauty brand system context context visualisation visual structure context visualisation background">
+                    <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img" data-index="2" alt="Artisan jewelry configuration context visualisation aspect frame context">
+                    <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img" data-index="3" alt="Lifestyle design presentation core profile asset aspect context">
+                    <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img" data-index="4" alt="Minimal architectural furniture conceptual aspect profile contextual profile">
+                    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80" class="industry-scenographic-img" data-index="5" alt="Clean wellness structure profile perspective profile">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-warm structural-scroll-marker" data-theme="color-stage-warm">
+        <div class="layout-wrapper">
+            <span class="label-editorial">Functional Core Modules</span>
+            <h2 class="split-statement-headline" style="max-width: 600px;">Enterprise Feature Implementations.</h2>
+            
+            <div class="specification-rows-container">
+                <div class="spec-collapsible-row">
+                    <div class="spec-row-trigger-panel">
+                        <h3 class="spec-row-title-text">Multi-Currency & International Pricing Layers</h3>
+                        <span class="spec-row-toggle-cross">+</span>
+                    </div>
+                    <div class="spec-row-hidden-body">
+                        <div class="spec-row-body-inner-content">
+                            We integrate precise geolocation matching routes that serve real-time localized price tags, accurate rounding rules, and compliance-matched localized payment endpoints directly inline with customer transaction pipelines.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spec-collapsible-row">
+                    <div class="spec-row-trigger-panel">
+                        <h3 class="spec-row-title-text">Advanced Subscription Matrix Infrastructures</h3>
+                        <span class="spec-row-toggle-cross">+</span>
+                    </div>
+                    <div class="spec-row-hidden-body">
+                        <div class="spec-row-body-inner-content">
+                            Developing frictionless customer account modification portals paired with clean tokenization systems to safeguard automated monthly logic sequences without degrading storefront performance metrics.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spec-collapsible-row">
+                    <div class="spec-row-trigger-panel">
+                        <h3 class="spec-row-title-text">Wholesale & Complex B2B Portals</h3>
+                        <span class="spec-row-toggle-cross">+</span>
+                    </div>
+                    <div class="spec-row-hidden-body">
+                        <div class="spec-row-body-inner-content">
+                            Constructing custom price sheets, specialized validation gates, quick order grid tables, and distinct tax exemption fields tied into a single Shopify Plus source administration matrix.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spec-collapsible-row">
+                    <div class="spec-row-trigger-panel">
+                        <h3 class="spec-row-title-text">Custom Marketplace Integrations</h3>
+                        <span class="spec-row-toggle-cross">+</span>
+                    </div>
+                    <div class="spec-row-hidden-body">
+                        <div class="spec-row-body-inner-content">
+                            Architecting complex multi-vendor mapping schemas, inventory data flows, and tracking status connections that reliably align with your store's backend logistics tools.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding color-stage-white structural-scroll-marker" data-theme="color-stage-white">
+        <div class="layout-wrapper">
+            <div class="premium-faq-split-axis">
+                <div class="faq-left-editorial-panel">
+                    <span class="label-editorial">Clear Answers</span>
+                    <h2>Need help deciding?</h2>
+                    <p>Connect with our engineering specialists directly to query tailored migration scopes, tech stack choices, and project roadmaps.</p>
+                    <div class="faq-editorial-contacts-list">
+                        <a href="mailto:hello@messold.com" class="faq-contact-anchor">hello@messold.com</a>
+                        <a href="tel:+12345678" class="faq-contact-anchor">+1 (234) 567-890</a>
+                    </div>
+                </div>
+                
+                <div class="faq-accordion-stack">
+                    <div class="faq-accordion-node">
+                        <div class="faq-node-trigger">
+                            <h3 class="faq-node-headline">Will our existing design elements remain intact during migration?</h3>
+                            <span class="faq-node-sign">+</span>
+                        </div>
+                        <div class="faq-node-hidden-drawer">
+                            <div class="faq-drawer-inner-prose">
+                                Yes. We map out your present user interface patterns fully before engineering optimization pipelines from scratch, refining layout efficiency elements while ensuring absolute brand system recognition.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-accordion-node">
+                        <div class="faq-node-trigger">
+                            <h3 class="faq-node-headline">How long does a custom enterprise storefront rollout take?</h3>
+                            <span class="faq-node-sign">+</span>
+                        </div>
+                        <div class="faq-node-hidden-drawer">
+                            <div class="faq-drawer-inner-prose">
+                                Standard enterprise architectures require roughly 8 to 14 weeks from structural scoping phases to secure public deployment. Timeline scales fluctuate based on system integrations and database complexities.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-accordion-node">
+                        <div class="faq-node-trigger">
+                            <h3 class="faq-node-headline">Do you provide continuous technical support cycles?</h3>
+                            <span class="faq-node-sign">+</span>
+                        </div>
+                        <div class="faq-node-hidden-drawer">
+                            <div class="faq-drawer-inner-prose">
+                                We maintain active strategic retainer systems providing rapid troubleshooting answers, seasonal flash-sale preparation, and structural component feature additions.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="section-padding color-stage-black structural-scroll-marker" id="footerContact" data-theme="color-stage-black" style="border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="layout-wrapper">
+            <div class="asymmetrical-studio-footer">
+                <div class="footer-left-headline">
+                    <h2>We're Ready <br>When You Are.</h2>
+                </div>
+                
+                <div class="footer-right-telemetry-directory">
+                    <div class="footer-directory-nav-block">
+                        <label>Engagement Loop</label>
+                        <a href="mailto:hello@messold.com">Book Discovery Call</a>
+                        <a href="mailto:hello@messold.com">hello@messold.com</a>
+                        <a href="#whatsapp">WhatsApp Studio Connect</a>
+                    </div>
+
+                    <div class="footer-directory-nav-block">
+                        <label>Availability Metrics</label>
+                        <div style="font-size: 0.95rem; opacity: 0.7; font-weight: 300; line-height: 1.6;">
+                            Typical Response Latency: &lt; 4 Hours <br>
+                            Office Hours: 09:00 — 18:00 EST / Mon — Fri
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-meta-notes-row" style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <span>MESSOLD Engineering Studio</span>
+                <span>&copy; 2026. All rights preserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // --- 1. HERO SCROLL ANIMATION ENGINE ---
+            const heroContainer = document.querySelector(".hero-scroll-container");
+            const heroText = document.getElementById("heroText");
+            const heroTicker = document.getElementById("heroTicker");
+
+            if (heroContainer && heroText && heroTicker) {
+                window.addEventListener("scroll", () => {
+                    const containerRect = heroContainer.getBoundingClientRect();
+                    const totalHeight = heroContainer.offsetHeight - window.innerHeight;
+                    const scrolled = Math.max(0, Math.min(1, -containerRect.top / totalHeight));
+                    
+                    heroText.style.transform = `translate3d(0, ${scrolled * -40}px, ${scrolled * -150}px) scale(${1 - scrolled * 0.08})`;
+                    heroText.style.opacity = `${1 - scrolled * 0.6}`;
+                    heroTicker.style.transform = `translate3d(0, ${scrolled * -60}px, 0)`;
+                });
+            }
+
+            // --- 2. THEME TRANSITION INTERSECTION OBSERVER ---
+            const scrollMarkers = document.querySelectorAll(".structural-scroll-marker");
+            const themeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeTheme = entry.target.getAttribute("data-theme");
+                        document.body.classList.remove("color-stage-white", "color-stage-warm", "color-stage-black");
+                        document.body.classList.add(activeTheme);
+                    }
+                });
+            }, {
+                rootMargin: "-30% 0px -30% 0px",
+                threshold: 0
+            });
+
+            scrollMarkers.forEach(marker => themeObserver.observe(marker));
+
+            // --- 3. PERSISTENT ELEMENT REVEAL TRIGGER ---
+            const revealNodes = document.querySelectorAll(".scroll-triggered-reveal");
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("revealed-node");
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            revealNodes.forEach(node => revealObserver.observe(node));
+
+            // --- 4. NEW: HORIZONTAL SCROLL-JACKED DEPLOYMENT ROUTINE ENGINE ---
+            const processStage = document.getElementById("deploymentroutine");
+            const processTrack = document.getElementById("processTrack");
+            const processNodes = document.querySelectorAll(".process-stage-node");
+
+            if (processStage && processTrack && processNodes.length > 0) {
+                const updateHorizontalScroll = () => {
+                    const stageRect = processStage.getBoundingClientRect();
+                    const totalScrollArea = processStage.offsetHeight - window.innerHeight;
+                    const scrollProgress = Math.max(0, Math.min(1, -stageRect.top / totalScrollArea));
+
+                    // Calculate total track width and needed translation
+                    const totalWidth = processTrack.offsetWidth;
+                    const visibleWidth = window.innerWidth;
+                    const maxTranslateX = totalWidth - visibleWidth;
+
+                    // Execute translation purely linearly based on scroll progress
+                    processTrack.style.transform = `translate3d(${-scrollProgress * maxTranslateX}px, 0, 0)`;
+
+                    // Reveal stages based on perspective positioning in the viewport
+                    processNodes.forEach(node => {
+                        const nodeRect = node.getBoundingClientRect();
+                        const nodeCenter = nodeRect.left + (nodeRect.width / 2);
+                        // If center crosses 75% point of viewport width
+                        if (nodeCenter < visibleWidth * 0.75) {
+                            node.classList.add("revealed-active-stage");
+                        } else {
+                            node.classList.remove("revealed-active-stage");
+                        }
+                    });
+                };
+
+                window.addEventListener("scroll", updateHorizontalScroll);
+                updateHorizontalScroll(); // Run once to set initial state
+            }
+
+            // --- 5. COUNTER ENGINE INTERSECTION LAYER ---
+            const counters = document.querySelectorAll(".metric-counter-display");
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = parseInt(entry.target.getAttribute("data-target"));
+                        if (isNaN(target)) return;
+                        
+                        let count = 0;
+                        const duration = 1500;
+                        const increment = target / (duration / 16);
+                        
+                        const updateCount = () => {
+                            count += increment;
+                            if (count >= target) {
+                                entry.target.innerText = target + (target === 99 && entry.target.parentElement.innerText.includes("Speed") ? "%" : (target === 18 ? "%" : ""));
+                            } else {
+                                entry.target.innerText = Math.floor(count);
+                                requestAnimationFrame(updateCount);
+                            }
+                        };
+                        updateCount();
+                        counterObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(counter => counterObserver.observe(counter));
+
+            // --- 6. VIDEO SLIDER ENGINE ---
+            const strip = document.getElementById("netflixStrip");
+            const nextBtn = document.getElementById("netflixNext");
+            const prevBtn = document.getElementById("netflixPrev");
+            let currentTranslateX = 0;
+
+            if (strip && nextBtn && prevBtn) {
+                const cardWidthWithGap = 410; // 380px card + 30px gap
+
+                nextBtn.addEventListener("click", () => {
+                    const maxScroll = strip.scrollWidth - strip.parentElement.offsetWidth;
+                    currentTranslateX -= cardWidthWithGap;
+                    if (Math.abs(currentTranslateX) >= maxScroll) {
+                        currentTranslateX = -maxScroll;
+                        nextBtn.disabled = true;
+                    }
+                    prevBtn.disabled = false;
+                    strip.style.transform = `translate3d(${currentTranslateX}px, 0, 0)`;
+                });
+
+                prevBtn.addEventListener("click", () => {
+                    currentTranslateX += cardWidthWithGap;
+                    if (currentTranslateX >= 0) {
+                        currentTranslateX = 0;
+                        prevBtn.disabled = true;
+                    }
+                    nextBtn.disabled = false;
+                    strip.style.transform = `translate3d(${currentTranslateX}px, 0, 0)`;
+                });
+            }
+
+            // --- 7. INDUSTRIES RIBBON HOVER CONTROLLER ---
+            const menuAnchors = document.querySelectorAll(".industry-menu-anchor-item");
+            const graphicImages = document.querySelectorAll(".industry-scenographic-img");
+
+            menuAnchors.forEach(anchor => {
+                anchor.addEventListener("mouseenter", () => {
+                    const index = anchor.getAttribute("data-index");
+                    
+                    menuAnchors.forEach(a => a.classList.remove("active-industry-item"));
+                    anchor.classList.add("active-industry-item");
+
+                    graphicImages.forEach(img => {
+                        if (img.getAttribute("data-index") === index) {
+                            img.classList.add("visible-img-node");
+                        } else {
+                            img.classList.remove("visible-img-node");
+                        }
+                    });
+                });
+            });
+
+            // --- 8. EXPANDABLE CUSTOM SPECIFICATION ROWS ---
+            const specRows = document.querySelectorAll(".spec-collapsible-row");
+            specRows.forEach(row => {
+                const trigger = row.querySelector(".spec-row-trigger-panel");
+                const hiddenBody = row.querySelector(".spec-row-hidden-body");
+
+                if (trigger && hiddenBody) {
+                    trigger.addEventListener("click", () => {
+                        const isOpen = row.classList.contains("row-expanded");
+                        
+                        specRows.forEach(r => {
+                            r.classList.remove("row-expanded");
+                            r.querySelector(".spec-row-hidden-body").style.maxHeight = null;
+                        });
+
+                        if (!isOpen) {
+                            row.classList.add("row-expanded");
+                            hiddenBody.style.maxHeight = hiddenBody.scrollHeight + "px";
+                        }
+                    });
+                }
+            });
+
+            // --- 9. ACCORDION FAQ ENGINE ---
+            const faqNodes = document.querySelectorAll(".faq-accordion-node");
+            faqNodes.forEach(node => {
+                const trigger = node.querySelector(".faq-node-trigger");
+                const drawer = node.querySelector(".faq-node-hidden-drawer");
+
+                if (trigger && drawer) {
+                    trigger.addEventListener("click", () => {
+                        const isNodeActive = node.classList.contains("drawer-active");
+
+                        faqNodes.forEach(n => {
+                            n.classList.remove("drawer-active");
+                            n.querySelector(".faq-node-hidden-drawer").style.maxHeight = null;
+                        });
+
+                        if (!isNodeActive) {
+                            node.classList.add("drawer-active");
+                            drawer.style.maxHeight = drawer.scrollHeight + "px";
+                        }
+                    });
+                }
+            });
+
+            // --- 10. EXPANDABLE BLUEPRINT BLUEPRINT PANES ---
+            const blueprintPanes = document.querySelectorAll(".blueprint-accordion-pane");
+            blueprintPanes.forEach(pane => {
+                pane.addEventListener("mouseenter", () => {
+                    if(window.innerWidth > 991) {
+                        blueprintPanes.forEach(p => p.style.flex = "1");
+                        pane.style.flex = "2.5";
+                    }
+                });
+                pane.addEventListener("mouseleave", () => {
+                    if(window.innerWidth > 991) {
+                        blueprintPanes.forEach(p => p.style.flex = "1");
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
